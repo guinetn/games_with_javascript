@@ -127,12 +127,21 @@ function draw_bezier() {
 }
 
 function draw_image() {
+
+	// way #1
+	/*
+	var image = new Image();	
+	image.src = 'rocket-01.png';	
+	// <img src=rocket.png> tag must exists on the document if onload is not used
+	ctx.drawImage(image, 235, 50);
+	*/
+
+	// way #2: onload
 	var image = new Image();	
 	image.onload = () => {
 		ctx.drawImage(image, 235, 50);
 	}
-	image.src = 'rocket-01.png';	// <img src=rocket.png> tag must exists on the document
-	//ctx.drawImage(image, 235, 50);
+	image.src = 'rocket-01.png';	
 	
 	/*
 	IMPORTANT: the image must be located on the same domain as this HTML document and served via the HTTP protocol.

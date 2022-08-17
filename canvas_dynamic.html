@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+	<html>
+	<head>
+		<title>Dynamic Canvas: basic animation</title>
+	</head>
+	<body>
+		<h1>Basic Animation using requestAnimationFrame API</h1>
+		<canvas id="drawingZone" width="600" height="400">
+		</canvas>
+	<script>
+
+window.onload=function() {	
+	setup();
+	setup_animation();
+	draw();
+}
+
+function setup() {
+	window.drawingZone = document.getElementById("drawingZone");
+	window.ctx = drawingZone.getContext("2d");
+	window.width = drawingZone.width;
+	window.height = drawingZone.height;
+
+	window.fps = 0;
+	window.timePrevious = 0;
+}
+
+function setup_animation() {
+	// animation related variables
+	// animation range [minX,maxX]
+	window.minX=20;        
+    window.maxX=250;       
+	// The current (x,y) rocket coordinate
+	window.rocket_x=minX;         
+    window.rocket_y=20;           
+	// Animation speed/direction
+    window.speedX=5;       // image will move at 1px per framerate 
+    window.direction=1;    // 1==righward, -1==leftward
+}
+
+function draw() {
+	draw_canvas_border();
+	draw_background(width, height);
+	draw_animation_boundaries();
+
+	draw_image(); // start animation when image is fullyloaded
+}
+
+
+
+
+function animate(time) {
+	animation_draw_current_scene();
+	animation_compute_next_step();
+	animation_rules();
+
+	const elapsed_ms = Math.floor(time-timePrevious);
+	timePrevious = time;
+	animation_show_status(elapsed_ms, 50, 370);
+
+	// When you have something to redraw, request another loop of animation
+	requestAnimationFrame(animate);
+}
+
+function animation_draw_current_scene() {
+	// clear the canvas
+	ctx.clearRect(0,0,width,height);
+
+	draw_canvas_border();
+	draw_background(width, height);
+	draw_animation_boundaries();
+	ctx.drawImage(image, rocket_x, rocket_y);
+	ctx.strokeRect(rocket_x, rocket_y, image.width, image.height); // image border
+}
+
+function animation_show_status(text, x, y) {
+	ctx.fillStyle="black";
+	ctx.font = '1.5em Arial';
+	ctx.fillText(`FPS: ${text}`, x, y);
+}
+
+function animation_compute_next_step() {
+	// update rocket position
+	rocket_x += speedX * direction;
+}
+
+function animation_rules() {
+	// keep "x" inside min & max
+	if (rocket_x < minX) { rocket_x = minX; direction*=-1; }
+	if (rocket_x > maxX) { rocket_x = maxX; direction*=-1; }
+}
+
+
+
+
+
+function draw_canvas_border() {
+	ctx.strokeRect(0,0, width, height);
+}
+
+function draw_animation_boundaries() {
+	ctx.lineWidth = 2;
+
+	ctx.beginPath();
+		ctx.moveTo(minX, 0); 
+		ctx.lineTo(minX, 150); 
+	ctx.stroke(); 
+
+	ctx.beginPath();
+		ctx.moveTo(maxX, 0); 
+		ctx.lineTo(maxX, 150); 
+	ctx.stroke();
+
+	// ctx.strokeRect(0,0, width, height);
+}
+
+function draw_background(w, h) {
+    grd = ctx.createLinearGradient(0, 20.000, 50.000, 0.000);
+    //adds the colors inside the canvas
+    grd.addColorStop(0.000, '#56CCF2');//from this color
+    grd.addColorStop(1.000, "#2F80ED");//to this one
+    ctx.fillStyle = grd;//fill the canvas with the gradients combinations
+    ctx.fillRect(0, 0, w, h);//fill the whole rectangle
+}
+
+function draw_image() {
+	window.image = new Image();	
+	image.onload = () => {
+		ctx.drawImage(image, rocket_x, rocket_y);
+
+		// the image is fully loaded: start animating
+		console.log("start animating");
+		requestAnimationFrame(animate);
+	}
+	image.src = 'rocket-01.png';	
+}
+</script>
+
+</body>
+</html>	
