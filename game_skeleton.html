@@ -43,7 +43,7 @@ function setup_animation() {
 	// animation range [minX,maxX]
 	window.minX=0;        
     window.maxX=250;       
-	// The current (x,y) rocket coordinate
+	// The current (x,y) sprite coordinate
 	window.sprite_x=minX;         
     window.sprite_y=20;           
 	// Animation speed/direction
@@ -96,7 +96,7 @@ function mustDraw(currentTime) {
 /* ---- PROCESS MOTION ---- */
 
 function process_motions() {
-	// update rocket position
+	// update sprite position
 	sprite_x += sprite_x_speed * direction;
 
 	motions_behavior_rules();
