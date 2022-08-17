@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+	<html>
+	<head>
+		<title>Dynamic Canvas: basic animation</title>
+	</head>
+
+	<body>
+		<h1>MY GAME NAME</h1>
+		<canvas id="drawingZone" width="600" height="400">
+		</canvas>
+	<script>
+
+window.onload=function() {	
+	setup();
+	start_game();
+}
+
+
+
+
+/* ---- SETUP ---- */
+
+function setup() {
+	setup_screen();
+    setup_animation();
+}
+
+function setup_screen() {
+	window.drawingZone = document.getElementById("drawingZone");
+	window.ctx = drawingZone.getContext("2d");
+	window.width = drawingZone.width;
+	window.height = drawingZone.height;
+}
+
+function setup_animation() {
+
+    window.duration=25;  // run animation every 0.2s
+	window.nextTime=0;   // the next animation begin time
+
+	// animation related variables
+	// animation range [minX,maxX]
+	window.minX=20;        
+    window.maxX=250;       
+	// The current (x,y) rocket coordinate
+	window.sprite_x=minX;         
+    window.sprite_y=20;           
+    window.sprite_size=30;           
+	// Animation speed/direction
+    window.speedX=2;       // image will move at 1px per framerate 
+    window.direction=1;    // 1==righward, -1==leftward
+}
+
+
+/* ---- START GAME ---- */
+
+function start_game() {
+    requestAnimationFrame(game_loop);	
+}
+
+
+
+/* ---- GAME LOOP ---- */
+
+function game_loop(currentTime) {
+
+	process_motions();
+
+	if (mustDraw(currentTime)) {
+		// Have something to redraw: call requestAnimationFrame
+		render_scene();
+	}
+	requestAnimationFrame(game_loop);
+}
+
+function mustDraw(currentTime) {
+	// wait for nextTime to occur
+	if (currentTime >= nextTime){
+        // time hasn't elapsed so just return
+		nextTime = currentTime + duration;
+		return true;
+    }
+	return false;
+}
+
+
+
+/* ---- PROCESS MOTION ---- */
+
+function process_motions() {
+	// update rocket position
+	sprite_x += speedX * direction;
+
+	motions_behavior_rules();
+}
+
+function motions_behavior_rules() {
+	// keep sprite_x inside min & max
+	if (sprite_x < -sprite_size ) { 
+        sprite_x = width + sprite_size/2; 
+    }
+	else if (sprite_x > width + sprite_size/2 ) { 
+        sprite_x = -sprite_size/2; 
+    }
+}
+
+
+
+/* ---- DRAWINGS ---- */
+
+function render_scene() {
+	clear_scene();
+	draw_scene_border();
+	draw_sprites();
+}
+
+function draw_sprites() {
+	// add another rectangle every 1000ms
+    ctx.fillStyle = "green";  
+    ctx.fillRect(sprite_x,sprite_y,sprite_size,sprite_size);
+	ctx.strokeRect(sprite_x, sprite_y, sprite_size,sprite_size); // rocket border
+}
+
+function draw_scene_border() {
+	ctx.strokeRect(0,0, width, height);
+}
+
+function clear_scene() {
+    ctx.fillStyle = "#000";  
+    ctx.fillRect(0, 0,  width, height);
+}
+</script>
+
+</body>
+</html>	

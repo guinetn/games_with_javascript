@@ -43,19 +43,30 @@ function draw() {
 	draw_background(width, height);
 	draw_animation_boundaries();
 
-	draw_image(); // start animation when image is fullyloaded
+	start_game(); // start animation when image is fullyloaded
 }
 
 
+function start_game() {
+	window.image = new Image();	
+	image.onload = () => {
+		ctx.drawImage(image, rocket_x, rocket_y);
+
+		// the image is fully loaded: start animating
+		console.log("start animating");
+		requestAnimationFrame(animate);
+	}
+	image.src = '../assets/rocket-01.png';	
+}
 
 
-function animate(time) {
+function animate(currentTime) {
 	animation_draw_current_scene();
 	animation_compute_next_step();
 	animation_rules();
 
-	const elapsed_ms = Math.floor(time-timePrevious);
-	timePrevious = time;
+	const elapsed_ms = Math.floor(currentTime-timePrevious);
+	timePrevious = currentTime;
 	animation_show_status(elapsed_ms, 50, 370);
 
 	// When you have something to redraw, request another loop of animation
@@ -63,9 +74,7 @@ function animate(time) {
 }
 
 function animation_draw_current_scene() {
-	// clear the canvas
-	ctx.clearRect(0,0,width,height);
-
+	erase_canvas();
 	draw_canvas_border();
 	draw_background(width, height);
 	draw_animation_boundaries();
@@ -90,9 +99,14 @@ function animation_rules() {
 	if (rocket_x > maxX) { rocket_x = maxX; direction*=-1; }
 }
 
-
-
-
+function erase_canvas() {
+	ctx.clearRect(0,0,width,height);
+	
+	/* Other way with a colored bkgnd:
+	context.fillStyle = '#FFFFFF';
+	context.fillRect(0, 0, 600, 400);
+	*/
+}
 
 function draw_canvas_border() {
 	ctx.strokeRect(0,0, width, height);
@@ -123,17 +137,6 @@ function draw_background(w, h) {
     ctx.fillRect(0, 0, w, h);//fill the whole rectangle
 }
 
-function draw_image() {
-	window.image = new Image();	
-	image.onload = () => {
-		ctx.drawImage(image, rocket_x, rocket_y);
-
-		// the image is fully loaded: start animating
-		console.log("start animating");
-		requestAnimationFrame(animate);
-	}
-	image.src = 'rocket-01.png';	
-}
 </script>
 
 </body>

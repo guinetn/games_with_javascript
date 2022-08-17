@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+	<html>
+	<head>
+		<title>Dynamic Canvas: basic animation</title>
+	</head>
+    <style>
+        body{ background-color:white; }
+    </style>
+	<body>
+		<h1>MY GAME NAME</h1>
+		<canvas id="drawingZone" width="600" height="400">
+		</canvas>
+	<script>
+
+window.onload=function() {	
+	setup();
+	start_game();
+}
+
+
+
+
+/* ---- SETUP ---- */
+
+function setup() {
+	setup_screen();
+    setup_animation();
+}
+
+function setup_screen() {
+	window.drawingZone = document.getElementById("drawingZone");
+	window.ctx = drawingZone.getContext("2d");
+	window.width = drawingZone.width;
+	window.height = drawingZone.height;
+}
+
+function setup_animation() {
+
+    window.duration_ms=5;  // run animation 200x/sec.  1000/15 = 15x/sec
+	window.nextTime=0;  // the next animation begin time
+
+	// animation related variables
+	// animation range [minX,maxX]
+	window.minX=0;        
+    window.maxX=250;       
+	// The current (x,y) rocket coordinate
+	window.sprite_x=minX;         
+    window.sprite_y=20;           
+	// Animation speed/direction
+    window.sprite_x_speed = 5;       // image will move at 1px per framerate 
+    window.direction=1;    			 // 1==righward, -1==leftward
+}
+
+
+/* ---- START GAME ---- */
+
+function start_game() {
+
+    window.sprite01 = new Image();	
+    sprite01.onload = () => {
+        ctx.drawImage(sprite01, sprite_x, sprite_y);
+
+        // image is fully loaded: start animating
+        requestAnimationFrame(game_loop);
+    }
+    sprite01.src = 'assets/rocket-01.png';	
+}
+
+
+
+/* ---- GAME LOOP ---- */
+
+function game_loop(currentTime) {
+
+	process_motions();
+
+	if (mustDraw(currentTime)) {
+		// Have something to redraw: call requestAnimationFrame
+		render_scene();
+	}
+	requestAnimationFrame(game_loop);
+}
+
+function mustDraw(currentTime) {
+	// wait for nextTime to occur
+	if (currentTime >= nextTime){
+        // time hasn't elapsed so just return
+		nextTime = currentTime + duration_ms;
+		return true;
+    }
+	return false;
+}
+
+
+
+/* ---- PROCESS MOTION ---- */
+
+function process_motions() {
+	// update rocket position
+	sprite_x += sprite_x_speed * direction;
+
+	motions_behavior_rules();
+}
+
+function motions_behavior_rules() {
+	// keep sprite_x inside min & max
+	if (sprite_x < minX || sprite_x > maxX) {  direction*=-1; }
+}
+
+
+
+/* ---- DRAWINGS ---- */
+
+function render_scene() {
+	clear_scene();
+	draw_scene_border();
+	draw_sprites();
+}
+
+function draw_sprites() {
+	ctx.drawImage(sprite01, sprite_x, sprite_y);
+	ctx.strokeRect(sprite_x, sprite_y, sprite01.width, sprite01.height); // sprite border
+}
+
+function draw_scene_border() {
+	ctx.strokeRect(0,0, width, height);
+}
+
+function clear_scene() {
+	// Empty background
+	//ctx.clearRect(0,0,width,height);
+	
+	// Colored background
+	draw_scene_background(width, height);
+	/* 
+	context.fillStyle = '#FFFFFF';
+	context.fillRect(0, 0, 600, 400);
+	*/
+}
+
+function draw_scene_background(w, h) {
+    grd = ctx.createLinearGradient(0, 20.000, 50.000, 0.000);
+    //adds the colors inside the canvas
+    grd.addColorStop(0.000, '#56CCF2'); // from this color
+    grd.addColorStop(1.000, "#2F80ED"); // to this one
+    ctx.fillStyle = grd;				// fill the canvas with the gradients combinations
+    ctx.fillRect(0, 0, w, h); 			
+}
+
+</script>
+
+</body>
+</html>	

@@ -1,0 +1,61 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <style>
+      body {
+        margin: 0px;
+        padding: 0px;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="myCanvas" width="500" height="200"></canvas>
+    <script>
+
+        function draw_canvas_border() {
+            context.strokeRect(0,0, canvas.width, canvas.height);
+        }
+
+        function erase_canvas() {
+          context.fillStyle = '#FFFFFF';
+          context.fillRect(0, 0, 600, 400);
+        }
+
+
+      function writeMessage(canvas, message) {
+        var context = canvas.getContext('2d');
+        context.clearRect(0, 0, canvas.width, canvas.height);
+        context.font = '18pt Calibri' ;
+        context.fillStyle = 'black';
+        context.fillText(message, 10, 25);
+        draw_canvas_border();
+      }
+
+      var canvas = document.getElementById('myCanvas');
+      var context = canvas.getContext('2d');
+      draw_canvas_border();
+   
+      document.addEventListener('keydown', function(evt) {
+        // evt.key: F1... Enter Tab ShiftLeft ControlLeft Space  ArrowUp ArrowDown  ArrowLeft ArrowRight   a  b  1 2  + -
+        // evt.code: F1... Enter Tab ShiftLeft ControlLeft Space  ArrowUp ArrowDown  ArrowLeft ArrowRight   KeyA  KeyB  Numpad1  Numpad1 NumpadAdd NumpadSubtract
+        switch(evt.key) {  
+          case 'a':
+            xv=-1;yv=0;
+            break;
+          case 'b':
+            xv=0;yv=-1;
+            break;
+          case 'ArrowUp':
+            xv=1;yv=0;
+            break;
+          case 'ArrowDown':
+            xv=0;yv=1;
+            break;
+        }
+        var message = 'Key Pressed: ' + evt.key;
+        writeMessage(canvas, message);
+      }, false);
+
+    </script>
+  </body>
+</html>

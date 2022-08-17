@@ -82,12 +82,11 @@ window.onload=(function(){
 
 ### Animation Framerate: How often do we need to paint?
 
+The temporal sensitivity and resolution of human vision varies between individuals.  
+The human visual system can process 10 to 12 images per second and perceive them individually, while higher rates are perceived as motion.
+
 Animation rule is to repeatedly clearing the canvas and repainting it faster than human eye detection
 The eye can see a difference between a delay of 40ms (brain image process delay). 
-
-1000ms/40ms = 25 img/sec to animate. It's the minimum animation rate. 
-
-To be "fluid", a framerate of 60 img/sec is correct
 
 ## 3. THE GAME LOOP
 
@@ -134,22 +133,82 @@ window.onload=function() {
 }
 ```
 
+Another way
+
+```js
+window.onload=(function(){
+
+    // animation interval variables
+    var nextTime=0;      // the next animation begins at "nextTime"
+    var duration=1000;   // run animation every 1000ms
+
+    requestAnimationFrame(animate);
+
+    function animate(currentTime){
+
+        // wait for nextTime to occur
+        if(currentTime<nextTime){
+            // request another loop of animation
+            requestAnimationFrame(animate);
+            // time hasn't elapsed so just return
+            return;
+        }
+        // set nextTime
+        nextTime=currentTime+duration;
+
+        // add another rectangle every 1000ms
+        ctx.fillStyle='#'+Math.floor(Math.random()*16777215).toString(16);
+        ctx.fillRect(x,30,30,30);
+
+        // request another loop of animation
+        requestAnimationFrame(animate);
+    }
+
+}); 
+```
+
+```js
+<script>
+		(function() {
+			
+			// Get a regular interval for drawing to the screen
+			window.requestAnimFrame = (function (callback) {
+				return window.requestAnimationFrame || 
+							window.webkitRequestAnimationFrame ||
+							window.mozRequestAnimationFrame ||
+							window.oRequestAnimationFrame ||
+							window.msRequestAnimaitonFrame ||
+							function (callback) {
+							 	window.setTimeout(callback, 1000/60);
+							};
+			})();
+            
+            // Allow for animation
+			(function drawLoop () {
+				requestAnimFrame(drawLoop);
+				renderCanvas();
+			})();
+
+		})();
+	</script>```
+
 To make Ajax requests, or deciding if adding/removing a class (that could trigger a CSS animation), I would consider _.debounce or _.throttle, where you can set up lower executing rates (200ms for example, instead of 16ms)
 
-## CONTROLLERS
+## 4. USER INTERACTIVITY
+### CONTROLLERS
 
     keyboard
     mouse
     game controller 
     webcam-gesture (AI)
 
-## ENGINES
+## 5. GAME ENGINES
 
     Unity
 
-## LIBS
+### LIBS
 
-## PHYSICS ENGINE
+## 6. PHYSICS ENGINE
 
 
 ### MORE

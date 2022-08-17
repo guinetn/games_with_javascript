@@ -6,7 +6,7 @@
 	<body>
 	
 		<canvas id="drawingZone" width="400" height="600">
-			<img id="rocket01" src="rocket-01.png">
+			<img id="rocket01" src="../assets/rocket-01.png">
 		</canvas>
 	<script>
 
@@ -141,7 +141,7 @@ function draw_image() {
 	image.onload = () => {
 		ctx.drawImage(image, 235, 50);
 	}
-	image.src = 'rocket-01.png';	
+	image.src = '../assets/rocket-01.png';	
 	
 	/*
 	IMPORTANT: the image must be located on the same domain as this HTML document and served via the HTTP protocol.
@@ -165,7 +165,7 @@ function draw_svg() {
         img.height = (originalHeight / originalWidth) * 120;
 		ctx.drawImage(img, 235, 350,  img.width,  img.height);
 	}
-	img.src = 'rocket-02.svg';	// <img src=rocket.png> tag must exists on the document
+	img.src = '../assets/rocket-02.svg';	// <img src=rocket.png> tag must exists on the document
 }
 
 </script>
