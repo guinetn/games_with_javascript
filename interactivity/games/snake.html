@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+	<html>
+	<head>
+		<title>Dynamic Canvas: basic animation</title>
+	</head>
+
+	<body>
+		<h1>SNAKE GAME</h1>
+		<canvas id="drawingZone" width="600" height="400">
+		</canvas>
+	<script>
+
+window.onload=function() {	
+	setup();
+}
+
+
+
+
+/* ---- SETUP ---- */
+
+function setup() {
+    window.gameStarted = false;
+    window.isGameOver = false;
+	setup_screen();
+    setup_animation();
+    setup_sprites();
+    setup_controller();
+    render_scene();
+    display_game_rules();
+}
+
+function setup_screen() {
+	window.drawingZone = document.getElementById("drawingZone");
+	window.ctx = drawingZone.getContext("2d");
+	window.width = drawingZone.width;
+	window.height = drawingZone.height;
+	
+    // Grid
+    window.gridCellSize = 20;
+	window.gridWidth = width/gridCellSize;
+	window.gridHeight = height/gridCellSize;
+}
+
+function setup_controller() {
+    document.addEventListener('keydown', function(evt) {
+        // evt.key: F1... Enter Tab ShiftLeft ControlLeft Space  ArrowUp ArrowDown  ArrowLeft ArrowRight   a  b  1 2  + -
+        // evt.code: F1... Enter Tab ShiftLeft ControlLeft Space  ArrowUp ArrowDown  ArrowLeft ArrowRight   KeyA  KeyB  Numpad1  Numpad1 NumpadAdd NumpadSubtract
+        switch(evt.key.toLowerCase()) {  
+            case 'arrowleft':
+                snake_x_velocity = -1;
+                snake_y_velocity = 0;
+                break;
+            case 'arrowup':
+                snake_x_velocity = 0;
+                snake_y_velocity = -1;
+                break;
+            case 'arrowright':
+                snake_x_velocity = 1;
+                snake_y_velocity = 0;
+                break;
+            case 'arrowdown':
+                snake_x_velocity = 0;
+                snake_y_velocity = 1;
+                break;
+            case 'r':
+                if (isGameOver) {
+                    setup();
+                }
+                return; 
+            default:
+                return;
+        }
+        if (!gameStarted && !isGameOver) {
+            start_game();
+        }
+    });
+}
+
+function setup_animation() {
+    window.duration=1000/15;  // run animation every 0.2s
+	window.nextTime=0;   // the next animation begin time
+}
+
+function setup_sprites() {
+    setup_snake();
+    setup_prey();
+}
+
+function setup_snake() {
+	// snake parameters
+
+    // The current (x,y) snake coordinate
+	window.snake_x = rand(gridWidth);         
+	window.snake_y = rand(gridHeight);    
+
+	window.snake_x_velocity = 0;     
+	window.snake_y_velocity = 0;     
+}
+
+function setup_prey() {
+    // The current (x,y) prey coordinate
+	window.prey_x = 1+rand(gridWidth-2);         
+	window.prey_y = 1+rand(gridHeight-2);     
+}
+
+
+
+/* ---- START GAME ---- */
+
+function start_game() {
+    gameStarted = true;
+    requestAnimationFrame(game_loop);	
+}
+
+
+
+/* ---- GAME LOOP ---- */
+
+function game_loop(currentTime) {
+    
+    if (mustDraw(currentTime)) {
+        process_motions();
+		// Have something to redraw: call requestAnimationFrame
+		render_scene();
+
+        if (is_game_over()) {
+            gameStarted = false;
+            isGameOver = true;
+            display_game_over();
+            return;
+        }
+	} 
+	requestAnimationFrame(game_loop);
+}
+
+function mustDraw(currentTime) {
+	// wait for nextTime to occur
+	if (currentTime >= nextTime){
+        // time hasn't elapsed so just return
+		nextTime = currentTime + duration;
+		return true;
+    }
+	return false;
+}
+
+
+
+/* ---- PROCESS MOTION ---- */
+
+function process_motions() {
+	// update snake position
+	snake_x += snake_x_velocity;
+	snake_y += snake_y_velocity;
+
+	motions_behavior_rules();
+}
+
+function motions_behavior_rules() {
+	if (snake_x < 0 ) { 
+        snake_x = gridWidth-1; 
+    }
+	else if (gridWidth <= snake_x ) { 
+        snake_x = 0; 
+    }
+    if (snake_y < 0 ) { 
+        snake_y = gridHeight-1; 
+    }
+	else if (gridHeight <= snake_y ) { 
+        snake_y = 0; 
+    }    
+}
+
+function is_game_over() {
+    return (snake_x==prey_x && snake_y==prey_y);
+}
+
+
+
+/* ---- DRAWINGS ---- */
+
+function display_game_rules() {
+    write_message("Press [← ↑ ↓ →] to start playing",width/3, height/2-15);
+}
+
+function display_game_over() {
+    write_message("Game over. Press [R] to restart", width/3, height/2-15);
+}
+
+function render_scene() {
+	clear_scene();
+	draw_scene_border();
+	draw_sprites();
+}
+
+function draw_sprites() {
+	draw_snake();
+	draw_prey();
+}
+
+function draw_snake() {
+	// add another rectangle every 1000ms
+    ctx.fillStyle = "green";  
+    ctx.fillRect( mapGridToScreen(snake_x), mapGridToScreen(snake_y),gridCellSize,gridCellSize);
+	ctx.strokeRect( mapGridToScreen(snake_x),  mapGridToScreen(snake_y), gridCellSize,gridCellSize); // snake border
+}
+
+function draw_prey() {
+	// add another rectangle every 1000ms
+    ctx.fillStyle = "red";  
+    ctx.beginPath();
+    ctx.arc( mapGridToScreen(prey_x)+gridCellSize/2, mapGridToScreen(prey_y)+gridCellSize/2, gridCellSize/2,0, Math.PI*2, false);
+    ctx.fill();
+}
+
+
+function draw_scene_border() {
+	ctx.strokeRect(0,0, width, height);
+}
+
+function clear_scene() {
+    ctx.fillStyle = "#000";  
+    ctx.fillRect(0, 0,  width, height);
+}
+
+function write_message(message, x=width/3, y=height/2-15) {
+    ctx.font = '18pt Calibri' ;
+    ctx.fillStyle = 'red';
+    ctx.fillText(message, x, y);
+}
+
+/* ---- Utils to be DRY... */
+
+let rand = (max) => Math.floor(Math.random(1)*max); 
+let mapGridToScreen = (v) => v * gridCellSize;
+
+</script>
+
+</body>
+</html>	

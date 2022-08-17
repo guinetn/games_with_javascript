@@ -25,6 +25,8 @@ window.onload=function() {
 function setup() {
 	setup_screen();
     setup_animation();
+
+	window.maxLoopsForGameOver = 6;
 }
 
 function setup_screen() {
@@ -71,12 +73,16 @@ function start_game() {
 /* ---- GAME LOOP ---- */
 
 function game_loop(currentTime) {
-
-	process_motions();
-
+	
 	if (mustDraw(currentTime)) {
 		// Have something to redraw: call requestAnimationFrame
+		process_motions();
 		render_scene();
+
+		if (is_game_over()) {
+			write_message("Game over", 25, height/2-10);
+            return;
+        }
 	}
 	requestAnimationFrame(game_loop);
 }
@@ -91,6 +97,9 @@ function mustDraw(currentTime) {
 	return false;
 }
 
+function is_game_over() {
+    return maxLoopsForGameOver<=0;
+}
 
 
 /* ---- PROCESS MOTION ---- */
@@ -104,7 +113,10 @@ function process_motions() {
 
 function motions_behavior_rules() {
 	// keep sprite_x inside min & max
-	if (sprite_x < minX || sprite_x > maxX) {  direction*=-1; }
+	if (sprite_x < minX || sprite_x > maxX) {  
+		direction*=-1; 
+		maxLoopsForGameOver--;
+	}
 }
 
 
@@ -146,6 +158,19 @@ function draw_scene_background(w, h) {
     ctx.fillStyle = grd;				// fill the canvas with the gradients combinations
     ctx.fillRect(0, 0, w, h); 			
 }
+
+function write_message(message, x, y) {
+    ctx.font = '18pt Calibri' ;
+    ctx.fillStyle = 'red';
+    ctx.fillText(message, x, y);
+}
+
+/* ---- Utils to be DRY... */
+
+// let rand = (max) => Math.floor(Math.random()*max);
+
+// A grid based game must have a mapping grid cell ←→ screen:
+// let mapGridToScreen = (v) => v * gridCellSize;
 
 </script>
 
