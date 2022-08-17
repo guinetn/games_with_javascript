@@ -36,24 +36,37 @@ function setup_animation() {
 
     window.duration=25;  // run animation every 0.2s
 	window.nextTime=0;   // the next animation begin time
+}
 
-	// animation related variables
-	// animation range [minX,maxX]
-	window.minX=20;        
-    window.maxX=250;       
-	// The current (x,y) rocket coordinate
-	window.sprite_x=minX;         
-    window.sprite_y=20;           
-    window.sprite_size=30;           
+function snake_appear() {
+	// snake parameters
+
+    // The current (x,y) snake coordinate
+	window.snake_x = rand(width);         
+	window.snake_y = rand(height);     
+    console.log(snake_x, snake_y);    
+    window.snake_size=30;           
 	// Animation speed/direction
     window.speedX=2;       // image will move at 1px per framerate 
     window.direction=1;    // 1==righward, -1==leftward
 }
 
 
+function apple_appear() {
+    // The current (x,y) apple coordinate
+	window.apple_x = rand(width);         
+	window.apple_y = rand(height);     
+    console.log(apple_x, apple_y);    
+    window.apple_size = 10;           
+}
+
+
+
 /* ---- START GAME ---- */
 
 function start_game() {
+    snake_appear();
+    apple_appear();
     requestAnimationFrame(game_loop);	
 }
 
@@ -87,19 +100,19 @@ function mustDraw(currentTime) {
 /* ---- PROCESS MOTION ---- */
 
 function process_motions() {
-	// update rocket position
-	sprite_x += speedX * direction;
+	// update snake position
+	snake_x += speedX * direction;
 
 	motions_behavior_rules();
 }
 
 function motions_behavior_rules() {
-	// keep sprite_x inside min & max
-	if (sprite_x < -sprite_size ) { 
-        sprite_x = width + sprite_size/2; 
+	// keep snake_x inside min & max
+	if (snake_x < -snake_size ) { 
+        snake_x = width + snake_size/2; 
     }
-	else if (sprite_x > width + sprite_size/2 ) { 
-        sprite_x = -sprite_size/2; 
+	else if (snake_x > width + snake_size/2 ) { 
+        snake_x = -snake_size/2; 
     }
 }
 
@@ -114,11 +127,25 @@ function render_scene() {
 }
 
 function draw_sprites() {
+	draw_snake();
+	draw_apple();
+}
+
+function draw_snake() {
 	// add another rectangle every 1000ms
     ctx.fillStyle = "green";  
-    ctx.fillRect(sprite_x,sprite_y,sprite_size,sprite_size);
-	ctx.strokeRect(sprite_x, sprite_y, sprite_size,sprite_size); // rocket border
+    ctx.fillRect(snake_x,snake_y,snake_size,snake_size);
+	ctx.strokeRect(snake_x, snake_y, snake_size,snake_size); // snake border
 }
+
+function draw_apple() {
+	// add another rectangle every 1000ms
+    ctx.fillStyle = "red";  
+    ctx.beginPath();
+    ctx.arc( apple_x,apple_y,apple_size,0,Math.PI*2,false);
+    ctx.fill();
+}
+
 
 function draw_scene_border() {
 	ctx.strokeRect(0,0, width, height);
@@ -128,6 +155,11 @@ function clear_scene() {
     ctx.fillStyle = "#000";  
     ctx.fillRect(0, 0,  width, height);
 }
+
+
+/* ---- Utils to be DRY... */
+
+let rand = (max) => Math.floor(Math.random()*max);
 </script>
 
 </body>
