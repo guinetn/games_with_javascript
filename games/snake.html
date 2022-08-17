@@ -20,8 +20,10 @@ window.onload=function() {
 /* ---- SETUP ---- */
 
 function setup() {
+
     window.gameStarted = false;
     window.isGameOver = false;
+    
 	setup_screen();
     setup_animation();
     setup_sprites();
@@ -43,8 +45,9 @@ function setup_screen() {
 }
 
 function setup_controller() {
+
     document.addEventListener('keydown', function(evt) {
-        // evt.key: F1... Enter Tab ShiftLeft ControlLeft Space  ArrowUp ArrowDown  ArrowLeft ArrowRight   a  b  1 2  + -
+        // evt.key:  F1... Enter Tab ShiftLeft ControlLeft Space  ArrowUp ArrowDown  ArrowLeft ArrowRight   a  b  1 2  + -
         // evt.code: F1... Enter Tab ShiftLeft ControlLeft Space  ArrowUp ArrowDown  ArrowLeft ArrowRight   KeyA  KeyB  Numpad1  Numpad1 NumpadAdd NumpadSubtract
         switch(evt.key.toLowerCase()) {  
             case 'arrowleft':
@@ -79,7 +82,7 @@ function setup_controller() {
 
 function setup_animation() {
     window.duration=1000/15;  // run animation every 0.2s
-	window.nextTime=0;   // the next animation begin time
+	window.nextTime=0;        // the next time animation must begin
 }
 
 function setup_sprites() {
@@ -121,7 +124,6 @@ function game_loop(currentTime) {
     
     if (mustDraw(currentTime)) {
         process_motions();
-		// Have something to redraw: call requestAnimationFrame
 		render_scene();
 
         if (is_game_over()) {
@@ -137,7 +139,7 @@ function game_loop(currentTime) {
 function mustDraw(currentTime) {
 	// wait for nextTime to occur
 	if (currentTime >= nextTime){
-        // time hasn't elapsed so just return
+        // nextTime occured: must draw
 		nextTime = currentTime + duration;
 		return true;
     }
@@ -149,14 +151,13 @@ function mustDraw(currentTime) {
 /* ---- PROCESS MOTION ---- */
 
 function process_motions() {
-	// update snake position
 	snake_x += snake_x_velocity;
 	snake_y += snake_y_velocity;
 
-	motions_behavior_rules();
+	motions_behavior_limitations();
 }
 
-function motions_behavior_rules() {
+function motions_behavior_limitations() {
 	if (snake_x < 0 ) { 
         snake_x = gridWidth-1; 
     }
@@ -199,14 +200,12 @@ function draw_sprites() {
 }
 
 function draw_snake() {
-	// add another rectangle every 1000ms
     ctx.fillStyle = "green";  
     ctx.fillRect( mapGridToScreen(snake_x), mapGridToScreen(snake_y),gridCellSize,gridCellSize);
 	ctx.strokeRect( mapGridToScreen(snake_x),  mapGridToScreen(snake_y), gridCellSize,gridCellSize); // snake border
 }
 
 function draw_prey() {
-	// add another rectangle every 1000ms
     ctx.fillStyle = "red";  
     ctx.beginPath();
     ctx.arc( mapGridToScreen(prey_x)+gridCellSize/2, mapGridToScreen(prey_y)+gridCellSize/2, gridCellSize/2,0, Math.PI*2, false);
