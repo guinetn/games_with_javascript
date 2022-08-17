@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+	<html>
+	<head>
+		<title>Static Canvas</title>
+	</head>
+	<body>
+	
+		<canvas id="drawingZone" width="400" height="600">
+			<img id="rocket01" src="rocket-01.png">
+		</canvas>
+	<script>
+
+window.onload=function() {	
+	setup();
+	draw();
+}
+
+function setup() {
+	window.drawingZone = document.getElementById("drawingZone");
+	window.ctx = drawingZone.getContext("2d");
+	window.width = drawingZone.width;
+	window.height = drawingZone.height;
+}
+
+function draw() {
+	// Add a border to the canvas
+	ctx.strokeRect(0,0, width, height);
+
+	draw_background(width, height);
+	
+	draw_rect(0,0, width/2, height/3);
+	draw_text('A rect on canvas!', 10, 40); 
+	
+	draw_circle_arc();
+	draw_path();
+	
+	draw_bezier();
+	drawStar(250,250,5,50,25,'gold','gray',9);
+	draw_text('Star !', 55, 75); 
+
+	draw_image();
+	draw_svg();
+}
+
+function draw_background(w, h) {
+    grd = ctx.createLinearGradient(0, 20.000, 50.000, 0.000);
+    //adds the colors inside the canvas
+    grd.addColorStop(0.000, '#56CCF2');//from this color
+    grd.addColorStop(1.000, "#2F80ED");//to this one
+    ctx.fillStyle = grd;//fill the canvas with the gradients combinations
+    ctx.fillRect(0, 0, w, h);//fill the whole rectangle
+}
+
+function draw_rect(x, y, w, h) {
+	ctx.fillStyle="crimson";
+	ctx.fillRect(x,y, w, h);
+}
+
+function draw_text(text, x, y) {
+	ctx.fillStyle="black";
+	ctx.font = '1.5em Arial';
+	ctx.fillText(text, x, y);
+}
+
+function draw_circle_arc() {
+	// Create a circular clipping path.
+	ctx.beginPath();
+	ctx.arc( 100,300,50,0,Math.PI*2,false);
+	//ctx.clip();
+	ctx.stroke(); 
+	
+	ctx.fillStyle="#bc1c1c20";
+	ctx.fill();
+}
+
+function draw_path() {
+	// A simple path
+	ctx.beginPath();
+		ctx.moveTo(20, 420);  // 1st point
+		ctx.lineTo(130, 420); // 2 point
+		ctx.lineTo(130, 450); // 3
+		ctx.lineTo(75, 530);  // 4
+		ctx.lineTo(20, 450);  // 5
+	ctx.closePath();     	  // optional: join last/first point
+	ctx.stroke();    
+	ctx.fill(); 			// will join last/first point and fill
+}
+
+function drawStar(centerX, centerY, points, outer, inner, fill, stroke, line) {
+	/* Complex paths: a star
+	// Usage:
+		drawStar(75,75,5,50,25,'mediumseagreen','gray',9);
+		drawStar(150,200,8,50,25,'skyblue','gray',3);
+		drawStar(225,75,16,50,20,'coral','transparent',0);
+		drawStar(300,200,16,50,40,'gold','gray',3);
+	*/
+    ctx.beginPath();
+    ctx.moveTo(centerX, centerY+outer);
+    for (var i=0; i < 2*points+1; i++) {
+        var r = (i%2 == 0)? outer : inner;
+        var a = Math.PI * i/points;
+        ctx.lineTo(centerX + r*Math.sin(a), centerY + r*Math.cos(a));
+    };
+    ctx.closePath();
+    ctx.fillStyle=fill;
+    ctx.fill();
+    ctx.strokeStyle=stroke;
+    ctx.lineWidth=line;
+    ctx.stroke()
+}
+
+function draw_bezier() {
+	ctx.beginPath();
+	ctx.moveTo(215, 200);
+		ctx.bezierCurveTo(131, 126, 126, 131, 119, 131);
+		ctx.lineTo(30, 131);
+		ctx.bezierCurveTo(23, 131, 18, 126, 18, 119);
+		ctx.lineTo(18, 30);
+		ctx.bezierCurveTo(18, 23, 23, 18, 30, 18);
+		ctx.lineTo(119, 18);
+		ctx.bezierCurveTo(126, 18, 131, 23, 131, 30);
+		ctx.lineTo(131, 119);
+	ctx.closePath();
+	ctx.fillStyle = "rgb(23, 145, 167,0.3)";
+	ctx.fill();
+	ctx.stroke();
+}
+
+function draw_image() {
+	var image = new Image();	
+	image.onload = () => {
+		ctx.drawImage(image, 235, 50);
+	}
+	image.src = 'rocket-01.png';	// <img src=rocket.png> tag must exists on the document
+	//ctx.drawImage(image, 235, 50);
+	
+	/*
+	IMPORTANT: the image must be located on the same domain as this HTML document and served via the HTTP protocol.
+	A security error will occur if the image is on a different domain or if served
+	by the local FILE protocol. Both files must be located on a single web domain. */
+}
+
+function draw_svg() {
+	let img = new Image();	
+	img.onload = () => {
+		// Declare initial dimensions of the image
+		let originalWidth = img.width;
+        let originalHeight = img.height;
+		console.log(img);
+		console.log("originalHeight");
+		console.log(originalHeight);
+
+		// Declare the new width of the image
+        // And calculate the new height to preserve the aspect ratio
+        img.width = 120;
+        img.height = (originalHeight / originalWidth) * 120;
+		ctx.drawImage(img, 235, 350,  img.width,  img.height);
+	}
+	img.src = 'rocket-02.svg';	// <img src=rocket.png> tag must exists on the document
+}
+
+</script>
+
+</body>
+</html>	
