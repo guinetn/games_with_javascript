@@ -7,14 +7,21 @@
         body{ background-color:white; }
     </style>
 	<body>
-		<h1>MY GAME NAME</h1>
+		<h1>MY GAME NAME - SKELEON</h1>
 		<canvas id="drawingZone" width="600" height="400">
 		</canvas>
+		<p>By nguinet.pro @ gmail.com</p>
+
 	<script>
 
 window.onload=function() {	
-	setup();
-	start_game();
+	
+	window.sprite01 = new Image();	
+    sprite01.onload = () => {
+		// image is fully loaded: start animating
+		setup();
+    }
+    sprite01.src = 'assets/rocket-01.png';	
 }
 
 
@@ -23,10 +30,16 @@ window.onload=function() {
 /* ---- SETUP ---- */
 
 function setup() {
+	window.maxLoopsForGameOver = 6;
+    window.gameStarted = false;
+    window.isGameOver = false;
+
 	setup_screen();
     setup_animation();
-
-	window.maxLoopsForGameOver = 6;
+	setup_sprites();
+    setup_controller();
+    render_scene();
+    display_game_rules();
 }
 
 function setup_screen() {
@@ -35,6 +48,39 @@ function setup_screen() {
 	window.width = drawingZone.width;
 	window.height = drawingZone.height;
 }
+
+function setup_controller() {
+
+document.addEventListener('keydown', function(evt) {
+	// evt.key:  F1... Enter Tab ShiftLeft ControlLeft Space  ArrowUp ArrowDown  ArrowLeft ArrowRight   a  b  1 2  + -
+	// evt.code: F1... Enter Tab ShiftLeft ControlLeft Space  ArrowUp ArrowDown  ArrowLeft ArrowRight   KeyA  KeyB  Numpad1  Numpad1 NumpadAdd NumpadSubtract
+	switch(evt.key.toLowerCase()) {  
+		case 'arrowleft':
+		
+			break;
+		case 'arrowup':
+			
+			break;
+		case 'arrowright':
+			
+			break;
+		case 'arrowdown':
+			
+			break;
+		case 'r':
+			if (isGameOver) {
+				setup();
+			}
+			return; 
+		default:
+			return;
+	}
+	if (!gameStarted && !isGameOver) {
+		start_game();
+	}
+});
+}
+
 
 function setup_animation() {
 
@@ -45,27 +91,30 @@ function setup_animation() {
 	// animation range [minX,maxX]
 	window.minX=0;        
     window.maxX=250;       
+}
+
+function setup_sprites() {
+	setup_rocket();
+}
+
+function setup_rocket() {
 	// The current (x,y) sprite coordinate
 	window.sprite_x=minX;         
-    window.sprite_y=20;           
+    window.sprite_y=25;           
 	// Animation speed/direction
     window.sprite_x_speed = 5;       // image will move at 1px per framerate 
     window.direction=1;    			 // 1==righward, -1==leftward
 }
 
 
+
+
+
 /* ---- START GAME ---- */
 
 function start_game() {
-
-    window.sprite01 = new Image();	
-    sprite01.onload = () => {
-        ctx.drawImage(sprite01, sprite_x, sprite_y);
-
-        // image is fully loaded: start animating
-        requestAnimationFrame(game_loop);
-    }
-    sprite01.src = 'assets/rocket-01.png';	
+	gameStarted = true;
+	requestAnimationFrame(game_loop);	
 }
 
 
@@ -77,10 +126,12 @@ function game_loop(currentTime) {
 	if (mustDraw(currentTime)) {
 		// Have something to redraw: call requestAnimationFrame
 		process_motions();
+        game_logic();
 		render_scene();
 
-		if (is_game_over()) {
-			write_message("Game over", 25, height/2-10);
+		if (isGameOver) {
+            gameStarted = false;
+			player_win() ? display_game_over('YOU WIN') : display_game_over('YOU LOOSE');
             return;
         }
 	}
@@ -90,16 +141,33 @@ function game_loop(currentTime) {
 function mustDraw(currentTime) {
 	// wait for nextTime to occur
 	if (currentTime >= nextTime){
-        // time hasn't elapsed so just return
+        // nextTime occured: must draw
 		nextTime = currentTime + duration_ms;
 		return true;
     }
 	return false;
 }
 
+
+
+
+
+
+
+/* ---- GAME LOGIC ---- */
+
+function game_logic() {
+    isGameOver = is_game_over();
+}
+
 function is_game_over() {
     return maxLoopsForGameOver<=0;
 }
+
+function player_win() {
+    return maxLoopsForGameOver == 0;
+}
+
 
 
 /* ---- PROCESS MOTION ---- */
@@ -108,10 +176,10 @@ function process_motions() {
 	// update sprite position
 	sprite_x += sprite_x_speed * direction;
 
-	motions_behavior_rules();
+	process_motions_limitations();
 }
 
-function motions_behavior_rules() {
+function process_motions_limitations() {
 	// keep sprite_x inside min & max
 	if (sprite_x < minX || sprite_x > maxX) {  
 		direction*=-1; 
@@ -121,15 +189,32 @@ function motions_behavior_rules() {
 
 
 
+
 /* ---- DRAWINGS ---- */
+
+function display_game_rules() {
+    write_message("Press [← ↑ ↓ →] to start playing",width/5, height/2-15);
+    write_message("Doing ... to win. You loose if ...", width/15, height/2+7);
+}
+
+function display_game_over(message) {
+    write_message(message, width/3, height/2-15);
+    write_message("Game over. Press [R] to restart", width/3, height/2+7);
+}
 
 function render_scene() {
 	clear_scene();
 	draw_scene_border();
 	draw_sprites();
+    // Start drawing score when...
+	maxLoopsForGameOver<10 && write_score(`Score: ${maxLoopsForGameOver}/6`);
 }
 
 function draw_sprites() {
+	draw_rocket();
+}
+
+function draw_rocket() {
 	ctx.drawImage(sprite01, sprite_x, sprite_y);
 	ctx.strokeRect(sprite_x, sprite_y, sprite01.width, sprite01.height); // sprite border
 }
@@ -162,6 +247,12 @@ function draw_scene_background(w, h) {
 function write_message(message, x, y) {
     ctx.font = '18pt Calibri' ;
     ctx.fillStyle = 'red';
+    ctx.fillText(message, x, y);
+}
+
+function write_score(message, x=10, y=20) {
+    ctx.font = '18pt Calibri' ;
+    ctx.fillStyle = '#6f6161';
     ctx.fillText(message, x, y);
 }
 

@@ -8,6 +8,8 @@
 		<h1>SNAKE GAME</h1>
 		<canvas id="drawingZone" width="600" height="400">
 		</canvas>
+		<p>By nguinet.pro @ gmail.com</p>
+
 	<script>
 
 window.onload=function() {	
@@ -23,7 +25,7 @@ function setup() {
 
     window.gameStarted = false;
     window.isGameOver = false;
-    
+
 	setup_screen();
     setup_animation();
     setup_sprites();
@@ -81,7 +83,7 @@ function setup_controller() {
 }
 
 function setup_animation() {
-    window.duration=1000/15;  // run animation every 0.2s
+    window.duration=1000/15;  // run animation 15x/sec
 	window.nextTime=0;        // the next time animation must begin
 }
 
@@ -92,10 +94,17 @@ function setup_sprites() {
 
 function setup_snake() {
 	// snake parameters
+    window.snake_beat_itself = false;
+    window.snake_eat_prey = false;
+    window.snake_prey_eated = 0;
+    window.snake_prey_eated_win_limit = 15;
+    window.snake_body_size = 5;
+    window.snake_body = [];
 
     // The current (x,y) snake coordinate
 	window.snake_x = rand(gridWidth);         
 	window.snake_y = rand(gridHeight);    
+    snake_body.push({x:snake_x, y:snake_y});
 
 	window.snake_x_velocity = 0;     
 	window.snake_y_velocity = 0;     
@@ -124,12 +133,12 @@ function game_loop(currentTime) {
     
     if (mustDraw(currentTime)) {
         process_motions();
+        game_logic();
 		render_scene();
 
-        if (is_game_over()) {
+        if (isGameOver) {
             gameStarted = false;
-            isGameOver = true;
-            display_game_over();
+            player_win() ? display_game_over('YOU WIN') : display_game_over('YOU LOOSE');
             return;
         }
 	} 
@@ -148,16 +157,57 @@ function mustDraw(currentTime) {
 
 
 
+/* ---- GAME LOGIC ---- */
+
+function game_logic() {
+    process_snake_status();
+    snake_growth();
+    isGameOver = is_game_over();
+}
+
+function snake_growth() {
+    if (snake_eat_prey) {
+        snake_prey_eated++;
+        setup_prey();
+        
+        // increase snake body
+        snake_body.push({})
+        // copy N-1 snake tail element to snake tail LAST element
+        snake_body.copyWithin(snake_body.length-1,snake_body.length-2);
+    }
+}
+
+function process_snake_status() {
+    snake_eat_prey = (snake_x==prey_x && snake_y==prey_y);
+    
+    snake_beat_itself = snake_body.slice(1)  // remove 'head'
+    .reduce((acc, s) => acc || (s.x==snake_body[0].x && s.y==snake_body[0].y), false);
+}
+
+function is_game_over() {
+    return snake_beat_itself || player_win();
+}
+
+function player_win() {
+    return snake_prey_eated >= snake_prey_eated_win_limit;
+}
+
+
+
+
 /* ---- PROCESS MOTION ---- */
 
 function process_motions() {
 	snake_x += snake_x_velocity;
 	snake_y += snake_y_velocity;
-
-	motions_behavior_limitations();
+    snake_body.unshift({x:snake_x, y:snake_y});    // Add head: follow player direction instruction
+    if (snake_body.length>=snake_body_size) {
+        snake_body.splice(snake_body.length-1,1);  // remove tail if longer than snake size
+    }
+	process_motions_limitations();
 }
 
-function motions_behavior_limitations() {
+function process_motions_limitations() {
 	if (snake_x < 0 ) { 
         snake_x = gridWidth-1; 
     }
@@ -172,26 +222,29 @@ function motions_behavior_limitations() {
     }    
 }
 
-function is_game_over() {
-    return (snake_x==prey_x && snake_y==prey_y);
-}
+
+
 
 
 
 /* ---- DRAWINGS ---- */
 
 function display_game_rules() {
-    write_message("Press [← ↑ ↓ →] to start playing",width/3, height/2-15);
+    write_message("Press [← ↑ ↓ →] to start playing",width/5, height/2-15);
+    write_message("Eat 10 preys to win. You loose if the snake beats itself", width/15, height/2+7);
 }
 
-function display_game_over() {
-    write_message("Game over. Press [R] to restart", width/3, height/2-15);
+function display_game_over(message) {
+    write_message(message, width/3, height/2-15);
+    write_message("Game over. Press [R] to restart", width/3, height/2+7);
 }
 
 function render_scene() {
 	clear_scene();
 	draw_scene_border();
 	draw_sprites();
+    // Start drawing score when a prey has beeen eated
+    snake_prey_eated>0 && write_score(`${snake_prey_eated}/15`);
 }
 
 function draw_sprites() {
@@ -201,8 +254,10 @@ function draw_sprites() {
 
 function draw_snake() {
     ctx.fillStyle = "green";  
-    ctx.fillRect( mapGridToScreen(snake_x), mapGridToScreen(snake_y),gridCellSize,gridCellSize);
-	ctx.strokeRect( mapGridToScreen(snake_x),  mapGridToScreen(snake_y), gridCellSize,gridCellSize); // snake border
+    snake_body.forEach((s,i)=> {
+        ctx.fillRect( mapGridToScreen(s.x), mapGridToScreen(s.y),gridCellSize,gridCellSize);
+        ctx.strokeRect( mapGridToScreen(snake_x),  mapGridToScreen(snake_y), gridCellSize,gridCellSize); // snake border
+    });
 }
 
 function draw_prey() {
@@ -211,7 +266,6 @@ function draw_prey() {
     ctx.arc( mapGridToScreen(prey_x)+gridCellSize/2, mapGridToScreen(prey_y)+gridCellSize/2, gridCellSize/2,0, Math.PI*2, false);
     ctx.fill();
 }
-
 
 function draw_scene_border() {
 	ctx.strokeRect(0,0, width, height);
@@ -228,9 +282,15 @@ function write_message(message, x=width/3, y=height/2-15) {
     ctx.fillText(message, x, y);
 }
 
+function write_score(message, x=10, y=20) {
+    ctx.font = '18pt Calibri' ;
+    ctx.fillStyle = '#6f6161';
+    ctx.fillText(message, x, y);
+}
+
 /* ---- Utils to be DRY... */
 
-let rand = (max) => Math.floor(Math.random(1)*max); 
+let rand = (max) => Math.floor(Math.random()*max); 
 let mapGridToScreen = (v) => v * gridCellSize;
 
 </script>
