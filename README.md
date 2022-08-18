@@ -190,7 +190,8 @@ window.onload=(function(){
 			})();
 
 		})();
-	</script>```
+	</script>
+```
 
 To make Ajax requests, or deciding if adding/removing a class (that could trigger a CSS animation), I would consider _.debounce or _.throttle, where you can set up lower executing rates (200ms for example, instead of 16ms)
 
@@ -207,6 +208,7 @@ To make Ajax requests, or deciding if adding/removing a class (that could trigge
     Unity
 
 ### LIBS
+
 
 ## 6. PHYSICS ENGINE
 
