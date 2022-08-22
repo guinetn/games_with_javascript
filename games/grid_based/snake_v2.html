@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+	<html>
+	<head>
+        <title>Snake Game v2: polish</title>
+        <style>
+            @font-face {
+            font-family: "game";
+            src: url("https://fonts.googleapis.com/css2?family=Poppins:wght@500;800&display=swap");
+            }
+
+            body {
+                background-color: #222738;
+                color: #6e7888;
+                font-family: "Poppins", sans-serif;
+                display:flex;
+                flex-direction: column;
+                align-items: center;
+
+            }
+            .flexH {
+                display:flex;
+                flex-direction: row;
+                align-items: center;
+                gap:1em;
+            }
+
+            .restart_button {
+                padding: 10px 20px;
+                background: #6e7888;
+                border: none;
+                color: #222738;
+                border-radius: 20px;
+                font-weight: 800;
+                font-size: 1.4em;
+                transform: rotate(270deg);
+                cursor: pointer;
+                transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1);
+            }
+            .restart_button:hover {
+                background: #a6aab5;
+                background: #4cffd7;
+                transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1);
+            }
+
+            .score_wrapper {
+                color:#6E7888;
+                width: 6em;
+                display:flex;
+                flex-direction: column;
+                align-items: center;
+            }
+            .score {
+                font-size: 1.2em;
+                font-weight: 200;
+                transform: rotate(-90deg) translateX(2em);
+            }
+            #score_value {
+                font-size: 2em;
+                font-weight: 800;
+            }
+
+            .author {
+                font-size: 10px;
+                margin-left: 1.5m;
+                letter-spacing: 2px;
+            }
+        </style>
+	</head>
+
+	<body>
+        <div class="flexH">
+            <h1>SNAKE</h1>
+            <span class="author">By nguinet.pro @ gmail.com</span>
+        </div>
+        <div class="flexH">
+            <div>
+                <button class="restart_button" onclick="setup()">Restart</button>
+            </div>
+            <canvas id="drawingZone" width="600" height="400">
+            </canvas>
+            <div class="score_wrapper">
+                <div class="score">Score</div>
+                <div id="score_value"> </div>
+            </div>
+        </div>
+
+	<script>
+
+window.onload=function() {	
+	setup();
+}
+
+
+
+
+/* ---- SETUP ---- */
+
+function setup() {
+
+    gameStarted = false;
+    isGameOver = false;
+
+	setup_screen();
+    setup_animation();
+    setup_sprites();
+    setup_controller();
+    render_scene();
+    display_game_rules();
+    write_score("");
+}
+
+function setup_screen() {
+	drawingZone = document.getElementById("drawingZone");
+	ctx = drawingZone.getContext("2d");
+	score = document.getElementById("score_value");
+	width = drawingZone.width;
+	height = drawingZone.height;
+	
+    // Grid
+    gridCellSize = 20;
+	gridWidth = width/gridCellSize;
+	gridHeight = height/gridCellSize;
+}
+
+function setup_controller() {
+
+    document.addEventListener('keydown', function(evt) {
+        console.log(evt.key);
+        // evt.key:  F1... Enter Tab Shift ControlLeft Space  ArrowUp ArrowDown  ArrowLeft ArrowRight   a  b  1 2  + -
+        // evt.code: F1... Enter Tab Shift ControlLeft Space  ArrowUp ArrowDown  ArrowLeft ArrowRight   KeyA  KeyB  Numpad1  Numpad1 NumpadAdd NumpadSubtract
+        switch(evt.key.toLowerCase()) {  
+            case 'arrowleft':
+                snake_x_velocity = -1;
+                snake_y_velocity = 0;
+                break;
+            case 'arrowup':
+                snake_x_velocity = 0;
+                snake_y_velocity = -1;
+                break;
+            case 'arrowright':
+                snake_x_velocity = 1;
+                snake_y_velocity = 0;
+                break;
+            case 'arrowdown':
+                snake_x_velocity = 0;
+                snake_y_velocity = 1;
+                break;
+            case 'shift':
+                if (isGameOver) {
+                    setup();
+                }
+                return; 
+            default:
+                return;
+        }
+        if (!gameStarted && !isGameOver) {
+            start_game();
+        }
+    });
+}
+
+function setup_animation() {
+    duration=1000/15;  // run animation 15x/sec
+	nextTime=0;        // the next time animation must begin
+}
+
+function setup_sprites() {
+    setup_snake();
+    setup_prey();
+    setup_particles();
+}
+
+function setup_snake() {
+	// snake parameters
+    snake_beat_itself = false;
+    snake_eat_prey = false;
+    snake_prey_eated = 0;
+    snake_prey_eated_win_limit = 15;
+    snake_body_size = 5;
+    snake_body = [];
+
+    // The current (x,y) snake coordinate
+	snake_x = rand(gridWidth);         
+	snake_y = rand(gridHeight);    
+    snake_body.push({x:snake_x, y:snake_y});
+
+	snake_x_velocity = 0;     
+	snake_y_velocity = 0;     
+}
+
+function setup_prey() {
+    // The current (x,y) prey coordinate
+	prey_x = 1+rand(gridWidth-2);         
+	prey_y = 1+rand(gridHeight-2);     
+    preyColor = `hsl(${~~(Math.random() * 360)},100%,50%)`;
+}
+
+
+// PARTICLES
+
+class Vec {
+    constructor(x, y) {
+      this.x = x;
+      this.y = y;
+    }
+    add(v) {
+      this.x += v.x;
+      this.y += v.y;
+      return this;
+    }
+    mult(v) {
+      if (v instanceof Vec) {
+        this.x *= v.x;
+        this.y *= v.y;
+        return this;
+      } else {
+        this.x *= v;
+        this.y *= v;
+        return this;
+      }
+    }
+  }
+
+function setup_particles() {
+    particles = [];
+    splashingParticleCount = 20;
+    prevTime = +new Date;
+}
+
+class Particle {
+  constructor(pos, color, size, vel) {
+    this.pos = pos;
+    this.color = color;
+    this.size = Math.abs(size / 2);
+    this.ttl = 0;
+    this.gravity = -0.3;
+    this.vel = vel;
+  }
+  draw() {
+    let { x, y } = this.pos;
+    let hsl = this.color
+      .split("")
+      .filter((l) => l.match(/[^hsl()$% ]/g))
+      .join("")
+      .split(",")
+      .map((n) => +n);
+    let [r, g, b] = hsl2rgb(hsl[0], hsl[1] / 100, hsl[2] / 100);
+    ctx.shadowColor = `rgb(${r},${g},${b},${1})`;
+    ctx.shadowBlur = 0;
+    ctx.globalCompositeOperation = "lighter";
+    ctx.fillStyle = `rgb(${r},${g},${b},${1})`;
+    ctx.beginPath();
+    ctx.arc( x, y, this.size+2, 0, Math.PI*2, true);
+    ctx.fill();
+    ctx.closePath();
+    ctx.globalCompositeOperation = "source-over";
+  }
+  update() {
+    this.draw();
+    this.size -= 0.5;
+    this.ttl += 1.9;
+    this.pos.add(this.vel);
+    this.vel.y -= this.gravity;
+  }
+}
+
+function particleSplash() {
+    for (let i = 0; i < splashingParticleCount; i++) {
+    let vel = new Vec(Math.random() * 6 - 3, Math.random() * 6 - 3);
+    let position = new Vec(mapGridToScreen(snake_x), mapGridToScreen(snake_y));
+    particles.push(new Particle(position, preyColor, gridCellSize, vel));
+  }
+}
+function hsl2rgb(hue, saturation, lightness) {
+    if (hue == undefined) {
+      return [0, 0, 0];
+    }
+    let chroma = (1 - Math.abs(2 * lightness - 1)) * saturation;
+    let huePrime = hue / 60;
+    let secondComponent = chroma * (1 - Math.abs((huePrime % 2) - 1));
+
+    huePrime = ~~huePrime;
+    let red;
+    let green;
+    let blue;
+
+    if (huePrime === 0) {
+      red = chroma;
+      green = secondComponent;
+      blue = 0;
+    } else if (huePrime === 1) {
+      red = secondComponent;
+      green = chroma;
+      blue = 0;
+    } else if (huePrime === 2) {
+      red = 0;
+      green = chroma;
+      blue = secondComponent;
+    } else if (huePrime === 3) {
+      red = 0;
+      green = secondComponent;
+      blue = chroma;
+    } else if (huePrime === 4) {
+      red = secondComponent;
+      green = 0;
+      blue = chroma;
+    } else if (huePrime === 5) {
+      red = chroma;
+      green = 0;
+      blue = secondComponent;
+    }
+
+    let lightnessAdjustment = lightness - chroma / 2;
+    red += lightnessAdjustment;
+    green += lightnessAdjustment;
+    blue += lightnessAdjustment;
+
+    return [
+      Math.round(red * 255),
+      Math.round(green * 255),
+      Math.round(blue * 255)
+    ];
+  }
+/* ---- START GAME ---- */
+
+function start_game() {
+    gameStarted = true;
+    requestAnimationFrame(game_loop);	
+}
+
+
+
+/* ---- GAME LOOP ---- */
+
+function game_loop(currentTime) {
+    
+    if (mustDraw(currentTime)) {
+        process_motions();
+        game_logic();
+		render_scene();
+
+        if (isGameOver) {
+            player_win() ? display_game_over('YOU WIN') : display_game_over('YOU LOOSE');
+            gameStarted = false;
+            return;
+        }
+	} 
+	requestAnimationFrame(game_loop);
+}
+
+function mustDraw(currentTime) {
+	// wait for nextTime to occur
+	if (currentTime >= nextTime){
+        // nextTime occured: must draw
+		nextTime = currentTime + duration;
+		return true;
+    }
+	return false;
+}
+
+
+
+/* ---- GAME LOGIC ---- */
+
+function game_logic() {
+    process_snake_status();
+    snake_growth();
+    isGameOver = is_game_over();
+}
+
+function garbageCollector() {
+    for (let i = 0; i < particles.length; i++) {
+      if (particles[i].size <= 0) {
+        particles.splice(i, 1); // remove particle when its size is < 0
+      }
+    }
+}
+
+function snake_growth() {
+    if (snake_eat_prey) {
+        snake_prey_eated++;
+        particleSplash();
+        setup_prey();
+        
+        // increase snake body
+        snake_body.push({})
+        // copy N-1 snake tail element to snake tail LAST element
+        snake_body.copyWithin(snake_body.length-1,snake_body.length-2);
+    }
+}
+
+function process_snake_status() {
+    snake_eat_prey = (snake_x==prey_x && snake_y==prey_y);
+    
+    snake_beat_itself = snake_body.slice(1)  // remove 'head'
+    .reduce((acc, s) => acc || (s.x==snake_body[0].x && s.y==snake_body[0].y), false);
+}
+
+function is_game_over() {
+    return snake_beat_itself || player_win();
+}
+
+function player_win() {
+    return snake_prey_eated >= snake_prey_eated_win_limit;
+}
+
+
+
+
+/* ---- PROCESS MOTION ---- */
+
+function process_motions() {
+	snake_x += snake_x_velocity;
+	snake_y += snake_y_velocity;
+    snake_body.unshift({x:snake_x, y:snake_y});    // Add head: follow player direction instruction
+    if (snake_body.length>=snake_body_size) {
+        snake_body.splice(snake_body.length-1,1);  // remove tail if longer than snake size
+    }
+	process_motions_limitations();
+}
+
+function process_motions_limitations() {
+	if (snake_x < 0 ) { 
+        snake_x = gridWidth-1; 
+    }
+	else if (gridWidth <= snake_x ) { 
+        snake_x = 0; 
+    }
+    if (snake_y < 0 ) { 
+        snake_y = gridHeight-1; 
+    }
+	else if (gridHeight <= snake_y ) { 
+        snake_y = 0; 
+    }    
+}
+
+
+
+
+
+
+/* ---- DRAWINGS ---- */
+
+function display_game_rules() {
+    write_message("Press [← ↑ ↓ →] to start playing",width/5, height/2-15);
+    write_message(`Eat ${snake_prey_eated_win_limit} preys to win. You loose if the snake beats itself`, width/15, height/2+7);
+}
+
+function display_game_over(message) {
+    write_message(message, width/3, height/2-15);
+    write_message("Game over. Press [SHIFT] to restart", width/3, height/2+7);
+}
+
+function render_scene() {
+	clear_scene();
+	draw_scene_border();
+    drawGrid();
+	draw_sprites();
+    // Start drawing score when a prey has beeen eated
+    snake_prey_eated>0 && write_score(`${snake_prey_eated}/15`);
+}
+
+function draw_sprites() {
+	draw_snake();
+	draw_prey();
+    for (let p of particles) {
+      p.update();
+    }
+    garbageCollector();
+}
+
+function draw_snake() {
+    ctx.fillStyle = "green";  
+    snake_body.forEach((s,i)=> {
+        ctx.fillRect( mapGridToScreen(s.x), mapGridToScreen(s.y),gridCellSize,gridCellSize);
+        ctx.strokeRect( mapGridToScreen(snake_x),  mapGridToScreen(snake_y), gridCellSize,gridCellSize); // snake border
+    });
+}
+
+function draw_prey() {
+    ctx.globalCompositeOperation = "lighter";
+    ctx.shadowBlur = 20;
+    ctx.shadowColor = preyColor;
+    ctx.fillStyle = preyColor;
+    ctx.arc( mapGridToScreen(prey_x)+gridCellSize/2, mapGridToScreen(prey_y)+gridCellSize/2, gridCellSize/2,0, Math.PI*2, false);
+    ctx.fill();
+    ctx.globalCompositeOperation = "source-over";
+    ctx.shadowBlur = 0;
+
+}
+
+function draw_scene_border() {
+	ctx.strokeRect(0,0, width, height);
+}
+
+function clear_scene() {
+    // ctx.fillStyle = "#000";  
+    // ctx.fillRect(0, 0,  width, height);
+
+    var curTime = +new Date;
+    var duration = (curTime - prevTime)/1000;
+    prevTime = curTime;
+
+    // alpha used to repaint gradually
+    var alpha = .25 + .1 * Math.cos(curTime * .01);
+    ctx.fillStyle = 'rgba( 0, 0, 0,' + alpha + ')';
+    ctx.fillRect(0, 0, width, height);
+
+}
+
+function write_message(message, x=width/3, y=height/2-15) {
+    ctx.font = '18pt Calibri';
+    ctx.fillStyle = 'red';
+    ctx.fillText(message, x, y);
+}
+
+function write_score(message) {
+    score.innerText = message;
+}
+
+function drawGrid() {
+    ctx.lineWidth = 1.1;
+    ctx.strokeStyle = "#232332";
+    ctx.shadowBlur = 0;
+    for (let i = 1; i < gridWidth; i++) {
+      let f = (width / gridWidth) * i;
+      ctx.beginPath();
+      ctx.moveTo(f, 0);
+      ctx.lineTo(f, height);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(0, f);
+      ctx.lineTo(width, f);
+      ctx.stroke();
+      ctx.closePath();
+    }
+}
+ 
+/* ---- Utils to be DRY... */
+
+let rand = (max) => Math.floor(Math.random()*max); 
+let mapGridToScreen = (v) => v * gridCellSize;
+
+</script>
+
+</body>
+</html>	
