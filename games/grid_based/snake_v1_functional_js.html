@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 	<html>
 	<head>
-		<title>Dynamic Canvas: basic animation</title>
+		<title>Snake Game v1: functional paradigm</title>
 	</head>
 
 	<body>
@@ -231,7 +231,7 @@ function process_motions_limitations() {
 
 function display_game_rules() {
     write_message("Press [← ↑ ↓ →] to start playing",width/5, height/2-15);
-    write_message("Eat 10 preys to win. You loose if the snake beats itself", width/15, height/2+7);
+    write_message("Eat 15 preys to win. You loose if the snake beats itself", width/15, height/2+7);
 }
 
 function display_game_over(message) {
@@ -277,7 +277,7 @@ function clear_scene() {
 }
 
 function write_message(message, x=width/3, y=height/2-15) {
-    ctx.font = '18pt Calibri' ;
+    ctx.font = '18pt Calibri';
     ctx.fillStyle = 'red';
     ctx.fillText(message, x, y);
 }
@@ -295,26 +295,5 @@ let mapGridToScreen = (v) => v * gridCellSize;
 
 </script>
 
-<!--
-https://www.youtube.com/watch?v=MCVU0w73uKI&t=5s
-
-00:00 Project intro
-01:56 Project setup
-07:20 Create a player
-21:39 Move the player
-37:09 Create projectiles
-47:15 Create an invader
-51:34 Create and move grids of invaders
-1:07:32 Spawn grids at intervals
-1:13:42 Shoot invaders
-1:22:34 Take into account new grid width
-1:26:32 Invaders shoot back
-1:36:47 Enemy explosions
-1:49:05 Create background stars
-1:54:20 Lose condition
-1:58:04 Score
-2:02:32 Fixed-width canvas
-
--->
 </body>
 </html>	
